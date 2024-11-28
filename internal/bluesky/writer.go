@@ -75,8 +75,36 @@ func WriteBlueskyPost(session Session, item rss.Item) (bool, error) {
 		return false, err
 	}
 
+	external_embed := ExternalEmbed{
+		Uri:   item.Link,
+		Title: item.Title,
+	}
+
+	meta_info, err := FetchLinkMetaInfo(item.Link)
+	if err == nil {
+		if meta_info.ThumbnailUrl != "" {
+			blob_ref, err := UploadBlob(session, meta_info.ThumbnailUrl)
+			if err != nil {
+				fmt.Printf("Couldn't upload image blob to bsky: %v\n", err)
+			} else {
+				external_embed.Thumb = &blob_ref
+			}
+		}
+		// a page might not have enough meta information to create the card,
+		// so we only overwrite the fallback if it does
+		if meta_info.Title != "" {
+			external_embed.Title = meta_info.Title
+		}
+		external_embed.Description = meta_info.Description
+	}
+
+	embed := Embed{
+		Type:     "app.bsky.embed.external",
+		External: external_embed,
+	}
+
 	// Write a post to bluesky.social
-	err = SendPost(session, content, facets, timestamp)
+	err = SendPost(session, content, facets, embed, timestamp)
 	if err != nil {
 		return false, err
 	}
