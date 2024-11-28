@@ -53,23 +53,6 @@ func WriteBlueskyPost(session Session, item rss.Item) (bool, error) {
 		facets = append(facets, categoryFacet)
 	}
 
-	// Add the item link
-	linkFacet := Facet{
-		Index: FacetIndex{
-			ByteStart: len(content),
-			ByteEnd:   len(content) + len(item.Link),
-		},
-		Features: []FacetFeature{
-			{
-				Type: "app.bsky.richtext.facet#link",
-				Uri:  item.Link,
-			},
-		},
-	}
-
-	content += item.Link
-	facets = append(facets, linkFacet)
-
 	timestamp, err := ConvertPubDateToRFC3339(item.PubDate)
 	if err != nil {
 		return false, err
