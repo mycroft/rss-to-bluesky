@@ -4,20 +4,20 @@ import (
 	"flag"
 
 	"github.com/mycroft/rss-to-bluesky/internal/bluesky"
+	"github.com/mycroft/rss-to-bluesky/internal/db"
 	"github.com/mycroft/rss-to-bluesky/internal/rss"
 )
 
 var (
-	dryRun bool
-	all    bool
-	one    bool
+	dryRun         bool
+	ignoreExisting bool
+	number         int
 )
 
 func init() {
 	flag.BoolVar(&dryRun, "dry-run", false, "Dry run mode, do not post to bluesky")
-	flag.BoolVar(&all, "all", false, "Post all items from the feed, ignoring the current database state")
-	flag.BoolVar(&one, "one", false, "Post only one item from the feed")
-
+	flag.BoolVar(&ignoreExisting, "ignore-existing", false, "Ignore existing posts in database")
+	flag.IntVar(&number, "number", -1, "Number of posts to check")
 }
 
 func main() {
@@ -34,7 +34,20 @@ func main() {
 		panic(err)
 	}
 
-	err = bluesky.WriteBlueskyPosts(rss, all, one, dryRun)
+	db, err := db.Open()
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	bs := bluesky.NewClient(db, dryRun, number, ignoreExisting)
+	bs.CheckSession()
+
+	// some code to test the bluesky client
+	// err = bs.GetUser()
+	// fmt.Println(err)
+
+	err = bs.WriteBlueskyPosts(rss)
 	if err != nil {
 		panic(err)
 	}
