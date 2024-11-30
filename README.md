@@ -8,7 +8,7 @@ You can find it live on [Bluesky](https://bsky.app/profile/lobsters-feed.bsky.so
 
 ```sh
 $ go build ./cmd/rss-to-bluesky/
-$ export BLUESKY_USERNAME="..."
-$ export BLUESKY_PASSWORD="..."
+$ export BLUESKY_USER="..."
+$ export BLUESKY_PASS="..."
 $ ./rss-to-bluesky
 ```
