@@ -95,7 +95,7 @@ func WriteBlueskyPost(session Session, item rss.Item) (bool, error) {
 	return true, nil
 }
 
-func WriteBlueskyPosts(rss rss.RSS) error {
+func WriteBlueskyPosts(rss rss.RSS, all, one, dryRun bool) error {
 	session := CheckBlueskySession()
 
 	dbInstance, err := db.OpenDB()
@@ -110,7 +110,7 @@ func WriteBlueskyPosts(rss rss.RSS) error {
 			return err
 		}
 
-		if found {
+		if found && !all {
 			continue
 		}
 
@@ -119,6 +119,15 @@ func WriteBlueskyPosts(rss rss.RSS) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		if dryRun {
+			fmt.Printf("Would write post: %s (ts: %s)\n", item.Title, item.PubDate)
+
+			if one {
+				break
+			}
+			continue
 		}
 
 		written, err := WriteBlueskyPost(session, item)
@@ -131,6 +140,10 @@ func WriteBlueskyPosts(rss rss.RSS) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		if one {
+			break
 		}
 	}
 

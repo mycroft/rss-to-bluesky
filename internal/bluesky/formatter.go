@@ -13,7 +13,7 @@ func ConvertPubDateToRFC3339(pubDate string) (string, error) {
 	}
 
 	// Format the time to RFC3339
-	rfc3339 := t.Format(time.RFC3339)
+	rfc3339 := t.UTC().Format(time.RFC3339)
 
 	return rfc3339, nil
 }
