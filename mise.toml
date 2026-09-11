@@ -1,0 +1,3 @@
+[tasks.build]
+description = "Build the rss-to-bluesky binary"
+run = "go build ./cmd/rss-to-bluesky"
