@@ -18,7 +18,7 @@ var (
 func init() {
 	flag.BoolVar(&dryRun, "dry-run", false, "Dry run mode, do not post to bluesky")
 	flag.BoolVar(&ignoreExisting, "ignore-existing", false, "Ignore existing posts in database")
-	flag.IntVar(&number, "number", -1, "Number of posts to check")
+	flag.IntVar(&number, "number", -1, "Maximum number of posts to write (-1 for no limit)")
 }
 
 func main() {

@@ -93,6 +93,12 @@ func (bs *BlueskyClient) WriteBlueskyPost(item rss.Item) (bool, error) {
 	return true, nil
 }
 
+// limitReached reports whether enough posts have been written for this run.
+// A non-positive Number means no limit.
+func (bs *BlueskyClient) limitReached(posted int) bool {
+	return bs.Number > 0 && posted >= bs.Number
+}
+
 func (bs *BlueskyClient) WriteBlueskyPosts(rss rss.RSS) error {
 	number := 0
 
@@ -116,7 +122,7 @@ func (bs *BlueskyClient) WriteBlueskyPosts(rss rss.RSS) error {
 
 			fmt.Printf("Would write post: %s (ts: %s)\n", item.Title, item.PubDate)
 
-			if number >= bs.Number {
+			if bs.limitReached(number) {
 				break
 			}
 			continue
@@ -136,7 +142,7 @@ func (bs *BlueskyClient) WriteBlueskyPosts(rss rss.RSS) error {
 			}
 		}
 
-		if number >= bs.Number {
+		if bs.limitReached(number) {
 			break
 		}
 	}
