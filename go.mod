@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	go.etcd.io/bbolt v1.3.11
+	golang.org/x/image v0.23.0
 	golang.org/x/net v0.31.0
 )
 

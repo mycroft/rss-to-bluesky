@@ -1,6 +1,7 @@
 package bluesky
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -98,11 +99,39 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 		fmt.Printf("Error loading preview image: %x\n", err)
 		return Blob{}, err
 	}
+	defer image_resp.Body.Close()
 
 	mime_type := image_resp.Header.Get("Content-Type")
 
+	if image_resp.ContentLength > maxDownloadSize {
+		return Blob{}, fmt.Errorf("preview image is %d bytes, refusing to download", image_resp.ContentLength)
+	}
+
+	image_data, err := io.ReadAll(io.LimitReader(image_resp.Body, maxDownloadSize+1))
+	if err != nil {
+		fmt.Printf("Error reading preview image: %v\n", err)
+		return Blob{}, err
+	}
+
+	if len(image_data) > maxDownloadSize {
+		return Blob{}, fmt.Errorf("preview image exceeds %d bytes", maxDownloadSize)
+	}
+
+	// The blob size limit is only enforced when the post record is created, so
+	// an oversized upload fails the whole post and orphans the blob. Shrink it
+	// here instead, and let the caller drop the thumbnail if that is not possible.
+	if len(image_data) > thumbnailBudget {
+		resized, resized_mime, err := shrinkImage(image_data)
+		if err != nil {
+			return Blob{}, fmt.Errorf("preview image is %d bytes and could not be shrunk: %v", len(image_data), err)
+		}
+
+		image_data = resized
+		mime_type = resized_mime
+	}
+
 	url := "https://bsky.social/xrpc/com.atproto.repo.uploadBlob"
-	req, err := http.NewRequest("POST", url, image_resp.Body)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(image_data))
 	if err != nil {
 		fmt.Printf("Error creating HTTP request: %x\n", err)
 		return Blob{}, err
