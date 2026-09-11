@@ -96,7 +96,7 @@ func NewClient(db *db.DB, dryRun bool, number int, ignoreExisting bool) BlueskyC
 func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 	image_resp, err := http.Get(source_url)
 	if err != nil {
-		fmt.Printf("Error loading preview image: %x\n", err)
+		fmt.Printf("Error loading preview image: %v\n", err)
 		return Blob{}, err
 	}
 	defer image_resp.Body.Close()
@@ -133,7 +133,7 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 	url := "https://bsky.social/xrpc/com.atproto.repo.uploadBlob"
 	req, err := http.NewRequest("POST", url, bytes.NewReader(image_data))
 	if err != nil {
-		fmt.Printf("Error creating HTTP request: %x\n", err)
+		fmt.Printf("Error creating HTTP request: %v\n", err)
 		return Blob{}, err
 	}
 
