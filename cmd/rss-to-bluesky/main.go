@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/mycroft/rss-to-bluesky/internal/bluesky"
 	"github.com/mycroft/rss-to-bluesky/internal/db"
@@ -38,10 +39,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("error closing database: %v", err)
+		}
+	}()
 
 	bs := bluesky.NewClient(db, dryRun, number, ignoreExisting)
-	bs.CheckSession()
+	if err := bs.CheckSession(); err != nil {
+		panic(err)
+	}
 
 	// some code to test the bluesky client
 	// err = bs.GetUser()

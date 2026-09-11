@@ -128,7 +128,10 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 	defer upload_resp.Body.Close()
 
 	parsed_response := UploadBlobReponse{}
-	json.Unmarshal(body, &parsed_response)
+	if err := json.Unmarshal(body, &parsed_response); err != nil {
+		fmt.Printf("Error unmarshaling upload response: %v\n", err)
+		return Blob{}, err
+	}
 
 	return parsed_response.Blob, nil
 

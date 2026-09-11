@@ -1,0 +1,39 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: build binaries
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            export GOOS="${target%/*}" GOARCH="${target#*/}"
+            echo "building ${GOOS}/${GOARCH}"
+            go build -trimpath -ldflags="-s -w" -o rss-to-bluesky ./cmd/rss-to-bluesky
+            tar -czf "dist/rss-to-bluesky_${GITHUB_REF_NAME}_${GOOS}_${GOARCH}.tar.gz" rss-to-bluesky
+            rm rss-to-bluesky
+          done
+          (cd dist && sha256sum *.tar.gz > checksums.txt)
+          ls -la dist
+
+      - name: create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes dist/*

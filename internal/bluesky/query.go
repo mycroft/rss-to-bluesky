@@ -20,14 +20,15 @@ func (bs *BlueskyClient) query(method, endpoint string, params interface{}) ([]b
 
 	baseUrl := "https://bsky.social"
 
-	if method == http.MethodGet {
+	switch method {
+	case http.MethodGet:
 		queryParams := url.Values{}
 		for key, value := range params.(map[string]string) {
 			queryParams.Add(key, value)
 		}
 
 		finalUrl = fmt.Sprintf("%s%s?%s", baseUrl, endpoint, queryParams.Encode())
-	} else if method == http.MethodPost {
+	case http.MethodPost:
 		finalUrl = fmt.Sprintf("%s%s", baseUrl, endpoint)
 
 		requestBody, err := json.Marshal(params)
@@ -40,7 +41,7 @@ func (bs *BlueskyClient) query(method, endpoint string, params interface{}) ([]b
 		} else {
 			postBody = nil
 		}
-	} else {
+	default:
 		return nil, fmt.Errorf("unsupported HTTP method: %s", method)
 	}
 

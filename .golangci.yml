@@ -1,0 +1,8 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # Deferred Close() on response bodies is conventional and not worth handling.
+      exclude-functions:
+        - (io.Closer).Close
