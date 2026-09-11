@@ -1,3 +1,11 @@
 [tasks.build]
 description = "Build the rss-to-bluesky binary"
 run = "go build ./cmd/rss-to-bluesky"
+
+[tasks.lint]
+description = "Run the CI lint checks (gofmt, vet, golangci-lint)"
+run = [
+  'test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }',
+  'go vet ./...',
+  'golangci-lint run ./...',
+]
