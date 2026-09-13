@@ -26,7 +26,9 @@ jobs:
           for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
             export GOOS="${target%/*}" GOARCH="${target#*/}"
             echo "building ${GOOS}/${GOARCH}"
-            go build -trimpath -ldflags="-s -w" -o rss-to-bluesky ./cmd/rss-to-bluesky
+            go build -trimpath \
+              -ldflags="-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA}" \
+              -o rss-to-bluesky ./cmd/rss-to-bluesky
             tar -czf "dist/rss-to-bluesky_${GITHUB_REF_NAME}_${GOOS}_${GOARCH}.tar.gz" rss-to-bluesky
             rm rss-to-bluesky
           done

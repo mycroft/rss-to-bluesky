@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"github.com/mycroft/rss-to-bluesky/internal/bluesky"
@@ -13,16 +14,23 @@ var (
 	dryRun         bool
 	ignoreExisting bool
 	number         int
+	showVersion    bool
 )
 
 func init() {
 	flag.BoolVar(&dryRun, "dry-run", false, "Dry run mode, do not post to bluesky")
 	flag.BoolVar(&ignoreExisting, "ignore-existing", false, "Ignore existing posts in database")
 	flag.IntVar(&number, "number", -1, "Maximum number of posts to write (-1 for no limit)")
+	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
 }
 
 func main() {
 	flag.Parse()
+
+	if showVersion {
+		fmt.Println(buildVersion())
+		return
+	}
 
 	feedUrl := "https://lobste.rs/newest.rss"
 	content, err := rss.FetchFeed(feedUrl)

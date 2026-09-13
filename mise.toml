@@ -1,6 +1,6 @@
 [tasks.build]
 description = "Build the rss-to-bluesky binary"
-run = "go build ./cmd/rss-to-bluesky"
+run = 'go build -ldflags "-X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo devel)" ./cmd/rss-to-bluesky'
 
 [tasks.lint]
 description = "Run the CI lint checks (gofmt, vet, golangci-lint)"
