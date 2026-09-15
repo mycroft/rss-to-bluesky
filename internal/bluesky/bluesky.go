@@ -101,7 +101,9 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 	}
 	defer image_resp.Body.Close()
 
-	mime_type := image_resp.Header.Get("Content-Type")
+	if image_resp.StatusCode != http.StatusOK {
+		return Blob{}, fmt.Errorf("preview image request returned %s", image_resp.Status)
+	}
 
 	if image_resp.ContentLength > maxDownloadSize {
 		return Blob{}, fmt.Errorf("preview image is %d bytes, refusing to download", image_resp.ContentLength)
@@ -115,6 +117,11 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 
 	if len(image_data) > maxDownloadSize {
 		return Blob{}, fmt.Errorf("preview image exceeds %d bytes", maxDownloadSize)
+	}
+
+	mime_type, err := resolveImageMimeType(image_data, image_resp.Header.Get("Content-Type"))
+	if err != nil {
+		return Blob{}, fmt.Errorf("preview image at %s: %v", source_url, err)
 	}
 
 	// The blob size limit is only enforced when the post record is created, so
@@ -153,6 +160,10 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 	if err != nil {
 		fmt.Printf("Error reading response body: %v\n", err)
 		return Blob{}, err
+	}
+
+	if upload_resp.StatusCode != http.StatusOK {
+		return Blob{}, fmt.Errorf("uploadBlob returned %s: %s", upload_resp.Status, string(body))
 	}
 
 	parsed_response := UploadBlobReponse{}

@@ -8,6 +8,9 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	_ "image/png"
+	"mime"
+	"net/http"
+	"strings"
 
 	"golang.org/x/image/draw"
 	_ "golang.org/x/image/webp"
@@ -73,4 +76,24 @@ func shrinkImage(data []byte) ([]byte, string, error) {
 	}
 
 	return nil, "", fmt.Errorf("still over %d bytes at lowest quality", thumbnailBudget)
+}
+
+// resolveImageMimeType decides what to tell bsky the blob is. Sites answer a
+// hotlink guard or a consent page with a 200 and an HTML body, and others
+// mislabel the type outright, so the bytes win over the Content-Type header.
+// The header is only a fallback for formats the sniffer doesn't know, such as
+// avif. An upload that is not an image at all fails the whole post at
+// createRecord, so reject it here.
+func resolveImageMimeType(data []byte, header string) (string, error) {
+	sniffed := http.DetectContentType(data)
+	if strings.HasPrefix(sniffed, "image/") {
+		return sniffed, nil
+	}
+
+	declared, _, err := mime.ParseMediaType(header)
+	if err == nil && strings.HasPrefix(declared, "image/") {
+		return declared, nil
+	}
+
+	return "", fmt.Errorf("not an image: sniffed %q, server declared %q", sniffed, header)
 }

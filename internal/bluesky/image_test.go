@@ -96,3 +96,52 @@ func TestShrinkExtremeAspect(t *testing.T) {
 		t.Fatalf("degenerate output: %dx%d", cfg.Width, cfg.Height)
 	}
 }
+
+func TestResolveMimeRejectsHTML(t *testing.T) {
+	// What actually broke: a hotlink guard answered the og:image URL with a
+	// 200 and an HTML page, and text/html reached createRecord as the thumb.
+	page := []byte("<!DOCTYPE html><html><head><title>403</title></head><body>nope</body></html>")
+	if got, err := resolveImageMimeType(page, "text/html; charset=utf-8"); err == nil {
+		t.Fatalf("accepted an HTML page as %q", got)
+	} else {
+		t.Logf("HTML page rejected: %v", err)
+	}
+}
+
+func TestResolveMimeSniffsOverBadHeader(t *testing.T) {
+	png := noisyPNG(t, 8, 8)
+	got, err := resolveImageMimeType(png, "text/html; charset=utf-8")
+	if err != nil {
+		t.Fatalf("resolveImageMimeType: %v", err)
+	}
+	if got != "image/png" {
+		t.Fatalf("mime = %q, want image/png", got)
+	}
+}
+
+func TestResolveMimeFallsBackToHeader(t *testing.T) {
+	// avif and friends sniff as application/octet-stream; the header is all we have.
+	avif := append([]byte{0, 0, 0, 0x1c}, []byte("ftypavif")...)
+	got, err := resolveImageMimeType(avif, "image/avif")
+	if err != nil {
+		t.Fatalf("resolveImageMimeType: %v", err)
+	}
+	if got != "image/avif" {
+		t.Fatalf("mime = %q, want image/avif", got)
+	}
+}
+
+func TestResolveMimeJPEGHasNoCharset(t *testing.T) {
+	// The resolved type goes straight into the uploadBlob Content-Type header.
+	jpg, _, err := shrinkImage(noisyPNG(t, 2000, 1500))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := resolveImageMimeType(jpg, "application/octet-stream")
+	if err != nil {
+		t.Fatalf("resolveImageMimeType: %v", err)
+	}
+	if got != "image/jpeg" {
+		t.Fatalf("mime = %q, want image/jpeg", got)
+	}
+}
