@@ -7,9 +7,9 @@ import (
 )
 
 func (bs *BlueskyClient) WriteBlueskyPost(item rss.Item) (bool, error) {
-	// add a # for each items in item.Categogies
-	categories := make([]string, len(item.Categogies))
-	for i, category := range item.Categogies {
+	// add a # for each item in item.Categories
+	categories := make([]string, len(item.Categories))
+	for i, category := range item.Categories {
 		categories[i] = "#" + category
 	}
 

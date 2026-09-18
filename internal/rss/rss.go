@@ -24,7 +24,7 @@ type Item struct {
 	Description string   `xml:"description"`
 	Link        string   `xml:"link"`
 	PubDate     string   `xml:"pubDate"`
-	Categogies  []string `xml:"category"`
+	Categories  []string `xml:"category"`
 }
 
 func FetchFeed(url string) (string, error) {

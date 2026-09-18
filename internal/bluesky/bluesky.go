@@ -76,7 +76,7 @@ type Embed struct {
 	External ExternalEmbed `json:"external"`
 }
 
-type UploadBlobReponse struct {
+type UploadBlobResponse struct {
 	Blob Blob `json:"blob"`
 }
 
@@ -166,7 +166,7 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 		return Blob{}, fmt.Errorf("uploadBlob returned %s: %s", upload_resp.Status, string(body))
 	}
 
-	parsed_response := UploadBlobReponse{}
+	parsed_response := UploadBlobResponse{}
 	if err := json.Unmarshal(body, &parsed_response); err != nil {
 		fmt.Printf("Error unmarshaling upload response: %v\n", err)
 		return Blob{}, err
