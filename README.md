@@ -12,3 +12,12 @@ $ export BLUESKY_USER="..."
 $ export BLUESKY_PASS="..."
 $ ./rss-to-bluesky
 ```
+
+The state database is created at `./database/db`, relative to the working
+directory. It stores the Bluesky session tokens, so it is created readable by
+its owner only. Earlier versions created it world-readable: if you already have
+one, tighten it once with
+
+```sh
+$ chmod 600 database/db
+```

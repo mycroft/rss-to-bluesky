@@ -31,8 +31,20 @@ func (d *DB) Has(key string) (bool, error) {
 	return has(d.db, key)
 }
 
+const (
+	defaultPath = "./database/db"
+
+	// The database holds the marshaled session: access JWT, refresh JWT,
+	// handle and account email. Keep it readable by its owner only.
+	fileMode = 0600
+)
+
 func openDB() (*bolt.DB, error) {
-	db, err := bolt.Open("./database/db", 0666, nil)
+	return openAt(defaultPath)
+}
+
+func openAt(path string) (*bolt.DB, error) {
+	db, err := bolt.Open(path, fileMode, nil)
 	if err != nil {
 		return nil, err
 	}
