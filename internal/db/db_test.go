@@ -15,7 +15,11 @@ func TestOpenCreatesPrivateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("openAt: %v", err)
 	}
-	defer db.Close()
+	t.Cleanup(func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("close: %v", err)
+		}
+	})
 
 	info, err := os.Stat(path)
 	if err != nil {
