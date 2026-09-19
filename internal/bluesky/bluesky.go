@@ -13,12 +13,11 @@ import (
 )
 
 type BlueskyClient struct {
-	Ready          bool
-	Session        Session
-	DB             *db.DB
-	DryRun         bool
-	Number         int
-	IgnoreExisting bool
+	Ready   bool
+	Session Session
+	DB      *db.DB
+	DryRun  bool
+	Number  int
 }
 
 type PostRequest struct {
@@ -81,14 +80,13 @@ type UploadBlobResponse struct {
 	Blob Blob `json:"blob"`
 }
 
-func NewClient(db *db.DB, dryRun bool, number int, ignoreExisting bool) BlueskyClient {
+func NewClient(db *db.DB, dryRun bool, number int) BlueskyClient {
 	return BlueskyClient{
-		Session:        Session{},
-		Ready:          false,
-		DB:             db,
-		DryRun:         dryRun,
-		Number:         number,
-		IgnoreExisting: ignoreExisting,
+		Session: Session{},
+		Ready:   false,
+		DB:      db,
+		DryRun:  dryRun,
+		Number:  number,
 	}
 }
 
