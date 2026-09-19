@@ -2,8 +2,8 @@ package bluesky
 
 import (
 	"fmt"
-	"net/http"
 
+	"github.com/mycroft/rss-to-bluesky/internal/httpx"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -37,7 +37,7 @@ func FindMetaProperty(root_node html.Node, property_name string) (string, error)
 }
 
 func FetchLinkMetaInfo(link string) (MetaInfo, error) {
-	resp, err := http.Get(link)
+	resp, err := httpx.Get(link)
 	if err != nil {
 		fmt.Printf("Error fetching from link: %v\n", err)
 		return MetaInfo{}, err

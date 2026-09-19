@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/mycroft/rss-to-bluesky/internal/db"
+	"github.com/mycroft/rss-to-bluesky/internal/httpx"
 )
 
 type BlueskyClient struct {
@@ -94,7 +95,7 @@ func NewClient(db *db.DB, dryRun bool, number int, ignoreExisting bool) BlueskyC
 // Fetches image hosted at `source_url` and uploads it to bsky servers.
 // Returns a reference to this upload to be embeded in a post.
 func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
-	image_resp, err := http.Get(source_url)
+	image_resp, err := httpx.Get(source_url)
 	if err != nil {
 		fmt.Printf("Error loading preview image: %v\n", err)
 		return Blob{}, err
@@ -147,8 +148,7 @@ func (bs *BlueskyClient) UploadBlob(source_url string) (Blob, error) {
 	req.Header.Set("Content-Type", mime_type)
 	req.Header.Set("Authorization", "Bearer "+bs.Session.AccessJWT)
 
-	client := &http.Client{}
-	upload_resp, err := client.Do(req)
+	upload_resp, err := httpx.Client.Do(req)
 	if err != nil {
 		fmt.Printf("Error sending HTTP request: %v\n", err)
 		return Blob{}, err

@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/mycroft/rss-to-bluesky/internal/httpx"
 )
 
 func (bs *BlueskyClient) query(method, endpoint string, params interface{}) ([]byte, error) {
@@ -15,8 +17,6 @@ func (bs *BlueskyClient) query(method, endpoint string, params interface{}) ([]b
 	var err error
 	var postBody io.Reader
 	var finalUrl string
-
-	client := &http.Client{}
 
 	baseUrl := "https://bsky.social"
 
@@ -53,7 +53,7 @@ func (bs *BlueskyClient) query(method, endpoint string, params interface{}) ([]b
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+bs.Session.AccessJWT)
 
-	resp, err = client.Do(req)
+	resp, err = httpx.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error sending HTTP request: %v", err)
 	}

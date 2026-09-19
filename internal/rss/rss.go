@@ -4,7 +4,8 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net/http"
+
+	"github.com/mycroft/rss-to-bluesky/internal/httpx"
 )
 
 type RSS struct {
@@ -29,7 +30,7 @@ type Item struct {
 
 func FetchFeed(url string) (string, error) {
 	// Fetch the RSS feed from the url and return the content
-	resp, err := http.Get(url)
+	resp, err := httpx.Get(url)
 	if err != nil {
 		fmt.Printf("Error fetching RSS feed: %v\n", err)
 		return "", err
