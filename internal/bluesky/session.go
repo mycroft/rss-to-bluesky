@@ -26,7 +26,7 @@ func (bs *BlueskyClient) CheckSession() error {
 	// Find out if there is a valid access token in database
 	encodedSession, err := bs.DB.Get("session")
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error reading session from database: %v", err)
 	}
 
 	if len(encodedSession) > 0 {

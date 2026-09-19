@@ -8,16 +8,27 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mycroft/rss-to-bluesky/internal/db"
 	"github.com/mycroft/rss-to-bluesky/internal/httpx"
+	"github.com/mycroft/rss-to-bluesky/internal/rss"
 )
+
+// Store is the part of the database this package needs.
+type Store interface {
+	Get(key string) ([]byte, error)
+	Set(key string, value []byte) error
+	Has(key string) (bool, error)
+}
 
 type BlueskyClient struct {
 	Ready   bool
 	Session Session
-	DB      *db.DB
+	DB      Store
 	DryRun  bool
 	Number  int
+
+	// writePost is the per-item write. It is nil outside tests, where
+	// WriteBlueskyPost is used instead.
+	writePost func(item rss.Item) (bool, error)
 }
 
 type PostRequest struct {
@@ -80,7 +91,7 @@ type UploadBlobResponse struct {
 	Blob Blob `json:"blob"`
 }
 
-func NewClient(db *db.DB, dryRun bool, number int) BlueskyClient {
+func NewClient(db Store, dryRun bool, number int) BlueskyClient {
 	return BlueskyClient{
 		Session: Session{},
 		Ready:   false,

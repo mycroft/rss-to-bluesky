@@ -30,20 +30,28 @@ func main() {
 		return
 	}
 
+	// run() rather than main() so the deferred close still runs: log.Fatal
+	// exits without unwinding.
+	if err := run(); err != nil {
+		log.Fatalf("rss-to-bluesky: %v", err)
+	}
+}
+
+func run() error {
 	feedUrl := "https://lobste.rs/newest.rss"
 	content, err := rss.FetchFeed(feedUrl)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error fetching feed: %v", err)
 	}
 
 	rss, err := rss.ParseFeed(content)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error parsing feed: %v", err)
 	}
 
 	db, err := db.Open()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error opening database: %v", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
@@ -52,16 +60,6 @@ func main() {
 	}()
 
 	bs := bluesky.NewClient(db, dryRun, number)
-	if err := bs.CheckSession(); err != nil {
-		panic(err)
-	}
 
-	// some code to test the bluesky client
-	// err = bs.GetUser()
-	// fmt.Println(err)
-
-	err = bs.WriteBlueskyPosts(rss)
-	if err != nil {
-		panic(err)
-	}
+	return bs.WriteBlueskyPosts(rss)
 }

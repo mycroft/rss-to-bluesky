@@ -2,6 +2,7 @@ package bluesky
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/mycroft/rss-to-bluesky/internal/rss"
 )
@@ -100,17 +101,25 @@ func (bs *BlueskyClient) limitReached(posted int) bool {
 }
 
 func (bs *BlueskyClient) WriteBlueskyPosts(rss rss.RSS) error {
-	number := 0
+	posted := 0
+	failed := 0
 
-	err := bs.CheckSession()
-	if err != nil {
-		panic(err)
+	if err := bs.CheckSession(); err != nil {
+		return fmt.Errorf("error checking session: %v", err)
+	}
+
+	// A single bad item must not strand the rest of the feed: successes are
+	// recorded as they happen, per-item failures are logged and skipped, and
+	// only the setup and database errors below abort the run.
+	write := bs.writePost
+	if write == nil {
+		write = bs.WriteBlueskyPost
 	}
 
 	for _, item := range rss.Channel.Items {
 		found, err := bs.DB.Has(item.GUID)
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading %s from database: %v", item.GUID, err)
 		}
 
 		if found {
@@ -118,33 +127,40 @@ func (bs *BlueskyClient) WriteBlueskyPosts(rss rss.RSS) error {
 		}
 
 		if bs.DryRun {
-			number += 1
+			posted += 1
 
 			fmt.Printf("Would write post: %s (ts: %s)\n", item.Title, item.PubDate)
 
-			if bs.limitReached(number) {
+			if bs.limitReached(posted) {
 				break
 			}
 			continue
 		}
 
-		number += 1
-
-		written, err := bs.WriteBlueskyPost(item)
+		written, err := write(item)
 		if err != nil {
-			return err
+			failed += 1
+			log.Printf("skipping %s: %v", item.GUID, err)
+			continue
 		}
 
 		if written {
-			err = bs.DB.Set(item.GUID, []byte("1"))
-			if err != nil {
-				return err
+			// A post that cannot be recorded would be posted again on the
+			// next run, so stop rather than duplicate the rest of the feed.
+			if err := bs.DB.Set(item.GUID, []byte("1")); err != nil {
+				return fmt.Errorf("error recording %s in database: %v", item.GUID, err)
 			}
+
+			posted += 1
 		}
 
-		if bs.limitReached(number) {
+		if bs.limitReached(posted) {
 			break
 		}
+	}
+
+	if failed > 0 {
+		return fmt.Errorf("%d item(s) failed, %d posted", failed, posted)
 	}
 
 	return nil
