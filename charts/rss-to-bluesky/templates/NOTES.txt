@@ -1,0 +1,8 @@
+rss-to-bluesky runs on schedule "{{ .Values.schedule }}"{{ if .Values.suspend }} (suspended){{ end }}.
+
+Credentials are read from the {{ .Values.existingSecret }} Secret (keys bluesky-user and
+bluesky-password). The state database is on the {{ include "rss-to-bluesky.claimName" . }} PersistentVolumeClaim,
+at /app/database/db: an empty one makes the first run post the whole feed.
+
+Run it now:
+  kubectl -n {{ .Release.Namespace }} create job --from=cronjob/{{ include "rss-to-bluesky.fullname" . }} {{ include "rss-to-bluesky.fullname" . | trunc 40 | trimSuffix "-" }}-manual

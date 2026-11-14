@@ -1,0 +1,2 @@
+# The smallest working configuration, for CI (helm lint, kubeconform).
+existingSecret: rss-to-bluesky

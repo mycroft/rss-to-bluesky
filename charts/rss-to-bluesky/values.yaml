@@ -1,0 +1,75 @@
+image:
+  repository: ghcr.io/mycroft/rss-to-bluesky
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Cron schedule of the runs.
+schedule: "*/5 * * * *"
+# IANA time zone of the schedule, e.g. Europe/Paris. Defaults to the
+# kube-controller-manager's.
+timeZone: ""
+# Stops scheduling new runs, e.g. while migrating the database.
+suspend: false
+# A run missing its start time by more than this many seconds is skipped.
+startingDeadlineSeconds: 60
+# A run still going after this many seconds is killed. Runs never overlap,
+# so a stuck one would otherwise block all the next ones; keep it below the
+# schedule's interval.
+activeDeadlineSeconds: 240
+successfulJobsHistoryLimit: 1
+failedJobsHistoryLimit: 3
+
+# Name of an existing Secret holding the Bluesky credentials (required); the
+# chart never creates it. Keys:
+#   bluesky-user      handle or email of the account
+#   bluesky-password  its password (an app password works)
+existingSecret: ""
+
+# Extra command-line flags, e.g. ["-dry-run"] or ["-number", "5"].
+args: []
+
+# Extra environment variables for the container.
+extraEnv: []
+
+# The state database: the Bluesky session and the GUIDs already posted. It is
+# required: without it, every run would post the whole feed again.
+persistence:
+  # Use this PersistentVolumeClaim instead of creating one.
+  existingClaim: ""
+  size: 1Gi
+  # Defaults to the cluster's default StorageClass.
+  storageClass: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532 # makes the database volume writable
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

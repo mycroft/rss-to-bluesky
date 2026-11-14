@@ -1,0 +1,13 @@
+apiVersion: v2
+name: rss-to-bluesky
+description: Posts the newest lobste.rs stories to Bluesky, on a schedule.
+type: application
+# Overwritten at release time with the tag (see .github/workflows/release.yml).
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/mycroft/rss-to-bluesky
+sources:
+  - https://github.com/mycroft/rss-to-bluesky
+keywords:
+  - rss
+  - bluesky

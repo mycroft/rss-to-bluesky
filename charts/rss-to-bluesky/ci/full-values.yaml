@@ -1,0 +1,38 @@
+# Every optional feature turned on, for CI (helm lint, kubeconform).
+existingSecret: rss-to-bluesky
+schedule: "*/10 * * * *"
+timeZone: Europe/Paris
+suspend: true
+image:
+  tag: 1.2.3
+imagePullSecrets:
+  - name: registry-credentials
+args:
+  - -number
+  - "5"
+extraEnv:
+  - name: EXTRA
+    value: "1"
+persistence:
+  existingClaim: rss-to-bluesky-data
+podAnnotations:
+  example.com/annotation: "true"
+podLabels:
+  team: platform
+nodeSelector:
+  kubernetes.io/os: linux
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: platform
+    effect: NoSchedule
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64

@@ -38,3 +38,46 @@ jobs:
 
       - name: build
         run: go build ./cmd/rss-to-bluesky
+
+  helm:
+    runs-on: ubuntu-latest
+    env:
+      CHART: charts/rss-to-bluesky
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.1
+
+      - name: install kubeconform
+        env:
+          KUBECONFORM_VERSION: v0.7.0
+          KUBECONFORM_SHA256: c31518ddd122663b3f3aa874cfe8178cb0988de944f29c74a0b9260920d115d3
+        run: |
+          curl -fsSLo kubeconform.tar.gz "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  kubeconform.tar.gz" | sha256sum -c -
+          tar xzf kubeconform.tar.gz kubeconform
+
+      # The chart refuses to render without its required values, so it is
+      # linted with the CI value files only.
+      - name: lint chart
+        run: |
+          for values in "${CHART}"/ci/*-values.yaml; do
+            helm lint --strict "${CHART}" -f "${values}"
+            helm template rss-to-bluesky "${CHART}" -f "${values}" \
+              | ./kubeconform -strict -summary
+          done
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
